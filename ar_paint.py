@@ -95,6 +95,7 @@ def main():
                 # Extract coordinates of bounding box
                 x, y, w, h = cv2.boundingRect(c)
 
+
                 # Calculate centroid and draw the red cross there
                 centroid = (int(x + w / 2), int(y + h / 2))
                 cv2.drawMarker(frame, centroid,
@@ -153,7 +154,7 @@ def main():
                    , color='white', on_color='on_red', attrs=['blink'])
 
         elif key == ord('w'):
-            time_string = ctime(time())
+            time_string = ctime(time()).replace(' ', '_')
             file_name = "Drawing_" + time_string + ".png"
             cv2.imwrite(file_name, whiteboard)
 
