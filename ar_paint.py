@@ -8,6 +8,7 @@ from time import ctime, time
 from colorama import Fore, Back, Style
 from termcolor import cprint
 
+
 # Variable initializing values
 radius = 10
 painting_color = (0, 0, 0)
