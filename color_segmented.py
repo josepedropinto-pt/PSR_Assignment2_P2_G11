@@ -15,31 +15,33 @@ import json
 def onTrackbarminBH(minBH):
     global minimumBH
     minimumBH = minBH
+    print("Selected threshold " + str(minBH) + " for limit B/H min")
 
 
 def onTrackbarmaxBH(maxBH):
     global maximumBH
     maximumBH = maxBH
-
+    print("Selected threshold " + str(maxBH) + " for limit B/H max")
 
 def onTrackbarminGS(minGS):
     global minimumGS
     minimumGS = minGS
-
+    print("Selected threshold " + str(minGS) + " for limit G/S min")
 
 def onTrackbarmaxGS(maxGS):
     global maximumGS
     maximumGS = maxGS
-
+    print("Selected threshold " + str(maxGS) + " for limit G/S max")
 
 def onTrackbarminRV(minRV):
     global minimumRV
     minimumRV = minRV
-
+    print("Selected threshold " + str(minRV) + " for limit R/V min")
 
 def onTrackbarmaxRV(maxRV):
     global maximumRV
     maximumRV = maxRV
+    print("Selected threshold " + str(maxRV) + " for limit R/V max")
 
 def main():
     # Globals
@@ -109,6 +111,7 @@ def main():
             with open(file_name, 'w') as file_handle:
                 print('Writing dictionary ranges to file ' + file_name)
                 json.dump(ranges, file_handle)
+                print(ranges)
                 break
 
 

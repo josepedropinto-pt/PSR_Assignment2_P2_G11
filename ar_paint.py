@@ -145,8 +145,11 @@ def main():
                   ' increased ' + Fore.RESET + 'to ' + str(radius))
 
         elif key == ord('-'):
-            radius -= 1
-            print('Pencil size' + Fore.RED +
+            if radius == 1:
+                print("Pencil size minimum reached!")
+            else:
+                radius -= 1
+                print('Pencil size' + Fore.RED +
                   ' decreased ' + Fore.RESET + 'to ' + str(radius))
 
         elif key == ord('c'):
