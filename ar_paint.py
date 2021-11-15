@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 
 import argparse
+import math
+
 import cv2
 import numpy as np
 import json
@@ -28,6 +30,11 @@ def main():
                         type=str,
                         required=True,
                         help='Full path to json file.')
+    parser.add_argument('-usp',
+                        '--use_shake_prevention',
+                        action='store_true',
+                        help='To use shake prevention.')
+
     args = vars(parser.parse_args())
 
     # Creating all of the windows
@@ -104,12 +111,24 @@ def main():
                 # Draw on the image
                 if previous_point == (0, 0):
                     previous_point = centroid
-                cv2.line(img=whiteboard,
+                if args['use_shake_prevention']:
+                    aux = (previous_point[0] - centroid[0], previous_point[1] - centroid[1])
+                    if math.sqrt(aux[0]**2 + aux[1]**2) >  50:
+                        cv2.circle(frame, centroid, radius, painting_color, -1)
+                    else:
+                        cv2.line(img=whiteboard,
                          pt1=previous_point,
                          pt2=centroid,
                          color=painting_color,
                          thickness=radius)
-                previous_point = centroid
+                    previous_point = centroid
+                else:
+                    cv2.line(img=whiteboard,
+                             pt1=previous_point,
+                             pt2=centroid,
+                             color=painting_color,
+                             thickness=radius)
+                    previous_point = centroid
 
         # Defining the window and plotting the whiteboard
         cv2.namedWindow(window_whiteboard, cv2.WINDOW_NORMAL)
