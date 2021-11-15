@@ -2,13 +2,13 @@
 
 import argparse
 import math
-
 import cv2
 import numpy as np
 import json
 from time import ctime, time
 from colorama import Fore, Back, Style
 from termcolor import cprint
+
 
 # Variable initializing values
 radius = 10
@@ -18,6 +18,7 @@ global mouse_coordinates
 mousetougle = False
 global whiteboard
 previous_mouse_point = (0, 0)
+wbinsteadframe = False
 
 
 
@@ -35,15 +36,9 @@ def onMouse(cursor, xposition, yposition, flags, param):
                  thickness=radius)
         previous_mouse_point = (xposition, yposition)
 
-
 def main():
     # Global variables
-    global radius
-    global painting_color
-    global previous_point
-    global mousetougle
-
-    # Toglles
+    global radius, painting_color, previous_point, mousetougle
 
     # Argparse arguments for program Initialization
     parser = argparse.ArgumentParser()
@@ -87,6 +82,7 @@ def main():
     _, frame = capture.read()
     width, height, channel = frame.shape
     whiteboard = np.ones((width, height, channel), np.uint8) * 255
+
 
     while True:
         # Read each frame of the video capture
@@ -215,6 +211,48 @@ def main():
         elif args['use_shake_prevention'] and key == ord('o'):
             mousetougle = False
             print('You can no longer use your mouse to paint')
+
+
+        elif key == ord('s'):
+            # color limits to create masks for each color
+            maskblue = (255,0,0)
+            maskgreen = (0,255,0)
+            maskred = (0,0,255)
+
+            # define kernel size to remove noise
+            kernel = np.ones((7, 7), np.uint8)
+
+            # create a mask for each color
+            blue_mask = cv2.inRange(whiteboard, maskblue, maskblue)
+            green_mask = cv2.inRange(whiteboard, maskgreen, maskgreen)
+            red_mask = cv2.inRange(whiteboard, maskred, maskred)
+
+            # Remove unnecessary noise from mask
+            blue_mask = cv2.morphologyEx(blue_mask, cv2.MORPH_CLOSE, kernel)
+            blue_mask = cv2.morphologyEx(blue_mask, cv2.MORPH_OPEN, kernel)
+            green_mask = cv2.morphologyEx(green_mask, cv2.MORPH_CLOSE, kernel)
+            green_mask = cv2.morphologyEx(green_mask, cv2.MORPH_OPEN, kernel)
+            red_mask = cv2.morphologyEx(red_mask, cv2.MORPH_CLOSE, kernel)
+            red_mask = cv2.morphologyEx(red_mask, cv2.MORPH_OPEN, kernel)
+
+            # Segment only the detected region
+            segmented_blue = cv2.bitwise_and(whiteboard, whiteboard, mask=blue_mask)
+            segmented_green = cv2.bitwise_and(whiteboard, whiteboard, mask=green_mask)
+            segmented_red = cv2.bitwise_and(whiteboard, whiteboard, mask=red_mask)
+
+            # Find contours from the mask
+            redcontours, redhierarchy = cv2.findContours(red_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+            #redcontours, redhierarchy = cv2.findContours(mask_color.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            output = cv2.drawContours(segmented_red, redcontours, -1, (255, 0, 255), 2)
+
+            greencontours, greenhierarchy = cv2.findContours(green_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+            output = cv2.drawContours(segmented_green, greencontours, -1, (255, 0, 255), 2)
+
+            bluecontours, bluehierarchy = cv2.findContours(blue_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+            output = cv2.drawContours(segmented_blue, bluecontours, -1, (255, 0, 255), 2)
+
+            # Showing the output
+            cv2.imshow('Color Segmentation', output)
 
         elif key == ord('q'):
             break

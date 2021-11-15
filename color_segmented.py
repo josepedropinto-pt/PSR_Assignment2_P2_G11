@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python3
 import argparse
 import timeit
 
@@ -16,7 +16,6 @@ def onTrackbarminBH(minBH):
     global minimumBH
     minimumBH = minBH
     print("Selected threshold " + str(minBH) + " for limit B/H min")
-
 
 def onTrackbarmaxBH(maxBH):
     global maximumBH
@@ -44,9 +43,10 @@ def onTrackbarmaxRV(maxRV):
     print("Selected threshold " + str(maxRV) + " for limit R/V max")
 
 def main():
-    # Globals
+    # Global variables
     global maximumBH, maximumGS, maximumRV, minimumBH, minimumGS, minimumRV
 
+    # initial values for the globals
     minimumBH = 0
     minimumGS = 0
     minimumRV = 0
@@ -54,13 +54,12 @@ def main():
     maximumGS = 255
     maximumRV = 255
 
-
-
     window_name = 'window - Ex3d'
 
     # Load image
     capture = cv2.VideoCapture(0)
 
+    # Parser
     parser = argparse.ArgumentParser()
     parser.add_argument('-hsv', '--hue_saturation_value', help='To modify the image using HSV instead of BGR',
                         action='store_true')
@@ -78,23 +77,26 @@ def main():
     cv2.createTrackbar('Max R/V', window_name, 255, 255, onTrackbarmaxRV)
 
     while True:
+
+        # Frame captured by the Video
         _, image = capture.read()
         image_original = image.copy()
 
+        # if user wants HSV mode
         if args['hue_saturation_value']:
             image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
             cv2.imshow('HSV', image)
 
-
+        # Ranges dictionary used in trackbars
         ranges = {'limits': {'B/H': {'max': maximumBH, 'min': minimumBH},
                              'G/S': {'max': maximumGS, 'min': minimumGS},
                              'R/V': {'max': maximumRV, 'min': minimumRV}}}
 
-        # Process image
+        # Process image and creat a mask
         mins = np.array([ranges['limits']['B/H']['min'], ranges['limits']['G/S']['min'], ranges['limits']['R/V'][
             'min']])  # Converts the dictionary representation in np.array, which is the representation required by the inRange function
         maxs = np.array([ranges['limits']['B/H']['max'], ranges['limits']['G/S']['max'], ranges['limits']['R/V']['max']])
-        mask = cv2.inRange(image, mins, maxs)  # Mask to detect the green box
+        mask = cv2.inRange(image, mins, maxs)
 
         # update image
         cv2.namedWindow(window_name)
