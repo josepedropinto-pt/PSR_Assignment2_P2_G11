@@ -10,11 +10,30 @@ from time import ctime, time
 from colorama import Fore, Back, Style
 from termcolor import cprint
 
-
 # Variable initializing values
 radius = 10
 painting_color = (0, 0, 0)
 previous_point = (0, 0)
+global mouse_coordinates
+mousetougle = False
+global whiteboard
+previous_mouse_point = (0, 0)
+
+
+
+def onMouse(cursor, xposition, yposition, flags, param):
+
+    global previous_mouse_point
+
+    if cursor == cv2.EVENT_MOUSEMOVE and mousetougle == True:
+        if previous_mouse_point==(0,0):
+            previous_mouse_point = (xposition, yposition)
+        cv2.line(img=param,
+                 pt1=previous_mouse_point,
+                 pt2=(xposition, yposition),
+                 color=painting_color,
+                 thickness=radius)
+        previous_mouse_point = (xposition, yposition)
 
 
 def main():
@@ -22,6 +41,9 @@ def main():
     global radius
     global painting_color
     global previous_point
+    global mousetougle
+
+    # Toglles
 
     # Argparse arguments for program Initialization
     parser = argparse.ArgumentParser()
@@ -111,17 +133,22 @@ def main():
                 # Draw on the image
                 if previous_point == (0, 0):
                     previous_point = centroid
-                if args['use_shake_prevention']:
+
+                if args['use_shake_prevention'] and mousetougle == False:
                     aux = (previous_point[0] - centroid[0], previous_point[1] - centroid[1])
-                    if math.sqrt(aux[0]**2 + aux[1]**2) >  50:
+
+                    if math.sqrt(aux[0] ** 2 + aux[1] ** 2) > 50:
                         cv2.circle(frame, centroid, radius, painting_color, -1)
                     else:
                         cv2.line(img=whiteboard,
-                         pt1=previous_point,
-                         pt2=centroid,
-                         color=painting_color,
-                         thickness=radius)
+                                 pt1=previous_point,
+                                 pt2=centroid,
+                                 color=painting_color,
+                                 thickness=radius)
                     previous_point = centroid
+
+                elif mousetougle == True and args['use_shake_prevention'] == True:
+                    cv2.setMouseCallback(window_whiteboard, onMouse, param=whiteboard)
                 else:
                     cv2.line(img=whiteboard,
                              pt1=previous_point,
@@ -169,7 +196,7 @@ def main():
             else:
                 radius -= 1
                 print('Pencil size' + Fore.RED +
-                  ' decreased ' + Fore.RESET + 'to ' + str(radius))
+                      ' decreased ' + Fore.RESET + 'to ' + str(radius))
 
         elif key == ord('c'):
             whiteboard = np.ones((width, height, channel), np.uint8) * 255
@@ -180,6 +207,14 @@ def main():
             time_string = ctime(time()).replace(' ', '_')
             file_name = "Drawing_" + time_string + ".png"
             cv2.imwrite(file_name, whiteboard)
+
+        elif args['use_shake_prevention'] and key == ord('m'):
+            mousetougle = True
+            print('Now you can move your mouse to paint')
+
+        elif args['use_shake_prevention'] and key == ord('o'):
+            mousetougle = False
+            print('You can no longer use your mouse to paint')
 
         elif key == ord('q'):
             break
