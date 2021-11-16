@@ -37,6 +37,7 @@ def onMouse(cursor, xposition, yposition, flags, param):
         previous_mouse_point = (xposition, yposition)
 
 
+
 def main():
     # Global variables
     global radius, painting_color, previous_point, mouse_toggle
@@ -88,7 +89,8 @@ def main():
     width, height, channel = frame.shape
 
     if args['augmented_reality']:
-        whiteboard = np.zeros((width, height, channel), np.uint8) * 255
+        whiteboard = np.ones((width, height, channel), np.uint8)
+        painting_color = (255,0,0)
     else:
         whiteboard = np.ones((width, height, channel), np.uint8) * 255
 
@@ -166,6 +168,19 @@ def main():
                              thickness=radius)
                     previous_point = centroid
 
+                # elif mouse_toggle == False and args['use_shake_prevention'] == True and args['augmented_reality'] == True:
+                #     aux = (previous_point[0] - centroid[0], previous_point[1] - centroid[1])
+                #
+                #     if math.sqrt(aux[0] ** 2 + aux[1] ** 2) > 50:
+                #         cv2.circle(frame, centroid, radius, painting_color, -1)
+                #     else:
+                #         cv2.line(img=whiteboard,
+                #                  pt1=previous_point,
+                #                  pt2=centroid,
+                #                  color=painting_color,
+                #                  thickness=radius)
+                #     previous_point = centroid
+
                 else:
                     cv2.line(img=whiteboard,
                              pt1=previous_point,
@@ -175,8 +190,7 @@ def main():
                     previous_point = centroid
 
         if args['augmented_reality'] == True:
-            fr = cv2.bitwise_not(whiteboard)
-            frame = cv2.add(frame, fr)
+            frame_painting = cv2.bitwise_or(frame, whiteboard)
 
             # Defining the window and plotting the image_segmented
             cv2.namedWindow(window_segmented, cv2.WINDOW_NORMAL)
@@ -185,6 +199,11 @@ def main():
             # Defining the window and plotting the original frame
             cv2.namedWindow(window_original_frame, cv2.WINDOW_NORMAL)
             cv2.imshow(window_original_frame, frame)
+
+            # Defining the window and plotting the original frame
+            cv2.namedWindow('Frame Painting', cv2.WINDOW_NORMAL)
+            cv2.imshow('Frame Painting', frame_painting)
+
         else:
             # Defining the window and plotting the whiteboard
             cv2.namedWindow(window_whiteboard, cv2.WINDOW_NORMAL)
@@ -244,48 +263,6 @@ def main():
         elif args['use_shake_prevention'] and key == ord('o'):
             mouse_toggle = False
             print('You can no longer use your mouse to paint')
-
-
-        elif key == ord('s'):
-            # color limits to create masks for each color
-            maskblue = (255, 0, 0)
-            maskgreen = (0, 255, 0)
-            maskred = (0, 0, 255)
-
-            # define kernel size to remove noise
-            kernel = np.ones((7, 7), np.uint8)
-
-            # create a mask for each color
-            blue_mask = cv2.inRange(whiteboard, maskblue, maskblue)
-            green_mask = cv2.inRange(whiteboard, maskgreen, maskgreen)
-            red_mask = cv2.inRange(whiteboard, maskred, maskred)
-
-            # Remove unnecessary noise from mask
-            blue_mask = cv2.morphologyEx(blue_mask, cv2.MORPH_CLOSE, kernel)
-            blue_mask = cv2.morphologyEx(blue_mask, cv2.MORPH_OPEN, kernel)
-            green_mask = cv2.morphologyEx(green_mask, cv2.MORPH_CLOSE, kernel)
-            green_mask = cv2.morphologyEx(green_mask, cv2.MORPH_OPEN, kernel)
-            red_mask = cv2.morphologyEx(red_mask, cv2.MORPH_CLOSE, kernel)
-            red_mask = cv2.morphologyEx(red_mask, cv2.MORPH_OPEN, kernel)
-
-            # Segment only the detected region
-            segmented_blue = cv2.bitwise_and(whiteboard, whiteboard, mask=blue_mask)
-            segmented_green = cv2.bitwise_and(whiteboard, whiteboard, mask=green_mask)
-            segmented_red = cv2.bitwise_and(whiteboard, whiteboard, mask=red_mask)
-
-            # Find contours from the mask
-            redcontours, redhierarchy = cv2.findContours(red_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-            # redcontours, redhierarchy = cv2.findContours(mask_color.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-            output = cv2.drawContours(segmented_red, redcontours, -1, (255, 0, 255), 2)
-
-            greencontours, greenhierarchy = cv2.findContours(green_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-            output = cv2.drawContours(segmented_green, greencontours, -1, (255, 0, 255), 2)
-
-            bluecontours, bluehierarchy = cv2.findContours(blue_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-            output = cv2.drawContours(segmented_blue, bluecontours, -1, (255, 0, 255), 2)
-
-            # Showing the output
-            cv2.imshow('Color Segmentation', output)
 
         elif key == ord('q'):
             break
