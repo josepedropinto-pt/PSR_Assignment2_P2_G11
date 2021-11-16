@@ -8,6 +8,8 @@ import json
 from time import ctime, time
 from colorama import Fore, Back, Style
 from termcolor import cprint
+import copy
+import image_slicer
 
 # Variable initializing values
 radius = 10
@@ -80,6 +82,9 @@ def main():
     print("- RED PAINT   " + Back.RED + "      " + Style.RESET_ALL + " -> PRESS " + Fore.RED + "'r'" + Fore.RESET)
     print("- GREEN PAINT " + Back.GREEN + "      " + Style.RESET_ALL + " -> PRESS " + Fore.GREEN + "'g'" + Fore.RESET)
     print("- BLUE PAINT  " + Back.BLUE + "      " + Style.RESET_ALL + " -> PRESS " + Fore.BLUE + "'b'" + Fore.RESET)
+    print("- ERASE       " + Back.WHITE + "      " + Style.RESET_ALL + " -> PRESS 'e'")
+    print("- MOUSE MODE    " + u"\U0001F5B0" + "   -> PRESS 'm'")
+    print("- SCREEN MODE   " + u"\U0001F5AF" + "   -> PRESS 'o'")
     print("- THICKER BRUSH " + u"\U0001F58C" + "   -> PRESS '" + "+" + "'")
     print("- THINNER BRUSH " + u"\U0001F58C" + "   -> PRESS '-'")
 
@@ -168,19 +173,6 @@ def main():
                              thickness=radius)
                     previous_point = centroid
 
-                # elif mouse_toggle == False and args['use_shake_prevention'] == True and args['augmented_reality'] == True:
-                #     aux = (previous_point[0] - centroid[0], previous_point[1] - centroid[1])
-                #
-                #     if math.sqrt(aux[0] ** 2 + aux[1] ** 2) > 50:
-                #         cv2.circle(frame, centroid, radius, painting_color, -1)
-                #     else:
-                #         cv2.line(img=whiteboard,
-                #                  pt1=previous_point,
-                #                  pt2=centroid,
-                #                  color=painting_color,
-                #                  thickness=radius)
-                #     previous_point = centroid
-
                 else:
                     cv2.line(img=whiteboard,
                              pt1=previous_point,
@@ -200,7 +192,7 @@ def main():
             cv2.namedWindow(window_original_frame, cv2.WINDOW_NORMAL)
             cv2.imshow(window_original_frame, frame)
 
-            # Defining the window and plotting the original frame
+            # Display the new image using frame as whiteboard
             cv2.namedWindow('Frame Painting', cv2.WINDOW_NORMAL)
             cv2.imshow('Frame Painting', frame_painting)
 
@@ -232,6 +224,10 @@ def main():
         elif key == ord('b'):
             painting_color = (255, 0, 0)
             print('Pencil color ' + Fore.BLUE + 'Blue' + Fore.RESET)
+
+        elif key == ord('e'):
+            painting_color = (255,255,255)
+            print('You Turned on the ' + Fore.BLUE + 'Eraser.' + Fore.RESET)
 
         elif key == ord('+'):
             radius += 1
