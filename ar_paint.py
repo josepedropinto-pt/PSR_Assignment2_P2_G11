@@ -227,7 +227,7 @@ def main():
 
         elif key == ord('e'):
             painting_color = (255,255,255)
-            print('You Turned on the ' + Fore.BLUE + 'Eraser.' + Fore.RESET)
+            print('You Turned the ' + Fore.BLUE + 'Eraser' + Fore.RESET + ' on.')
 
         elif key == ord('+'):
             radius += 1
