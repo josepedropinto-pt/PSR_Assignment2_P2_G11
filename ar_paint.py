@@ -6,10 +6,15 @@ import cv2
 import numpy as np
 import json
 from time import ctime, time
+from numpy.linalg import norm
+
+import readchar
 from colorama import Fore, Back, Style
 from termcolor import cprint
 import copy
-import image_slicer
+from pynput.keyboard import Key, Controller
+import keyboard
+
 
 # Variable initializing values
 radius = 10
@@ -20,6 +25,27 @@ mouse_toggle = False
 global whiteboard
 previous_mouse_point = (0, 0)
 wbinsteadframe = False
+global drawing_mode
+x_previous = 0
+y_previous = 0
+
+
+def onShapes(cursor, xposition, yposition, flags, param):
+    shape = readchar.readkey()
+    if shape == ord('s'):
+        print('Drawing square')
+    elif shape == ord('o'):
+        print('drawing circle')
+
+
+    if cursor == cv2.EVENT_MOUSEMOVE:
+         previous_draw = (x_previous, y_previous)
+         centroid= (xposition, yposition)
+         final_point = (yposition -y_previous, xposition-x_previous)
+         radius_draw = norm(final_point)
+         print(radius_draw)
+
+         cv2.circle(param, (xposition, yposition), 10, painting_color, -1)
 
 
 def onMouse(cursor, xposition, yposition, flags, param):
@@ -214,6 +240,7 @@ def main():
             cv2.imshow(window_original_frame, frame)
 
         key = cv2.waitKey(10)
+        keyboard = Controller()
 
         # Defining all keyboard shortcuts and there functions
         if key == ord('r'):
@@ -260,9 +287,14 @@ def main():
             mouse_toggle = True
             print('Now you can move your mouse to paint')
 
-        elif args['use_shake_prevention'] and key == ord('o'):
+        elif args['use_shake_prevention'] and key == ord('n'):
             mouse_toggle = False
             print('You can no longer use your mouse to paint')
+
+        elif key == ord('d'):
+            drawing_mode = True
+            print('draw')
+            cv2.setMouseCallback(window_whiteboard, onShapes, param=whiteboard)
 
         elif key == ord('q'):
             break
