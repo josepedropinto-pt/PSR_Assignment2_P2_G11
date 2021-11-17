@@ -31,13 +31,17 @@ def onMouse(cursor, xposition, yposition, flags, param):
         # Draws line with the mouse position
         if previous_mouse_point == (0, 0):
             previous_mouse_point = (xposition, yposition)
-        cv2.line(img=param,
-                 pt1=previous_mouse_point,
-                 pt2=(xposition, yposition),
-                 color=painting_color,
-                 thickness=radius)
-        previous_mouse_point = (xposition, yposition)
 
+        aux = (previous_point[0] - xposition, previous_point[1] - yposition)
+        if math.sqrt(aux[0] ** 2 + aux[1] ** 2) > 320:
+            cv2.circle(param, (xposition, yposition), radius, painting_color, -1)
+        else:
+            cv2.line(img=param,
+                     pt1=previous_mouse_point,
+                     pt2=(xposition, yposition),
+                     color=painting_color,
+                     thickness=radius)
+        previous_mouse_point = (xposition, yposition)
 
 
 def main():
@@ -149,8 +153,8 @@ def main():
                 if args['use_shake_prevention'] and mouse_toggle == False and args['augmented_reality'] == False:
                     aux = (previous_point[0] - centroid[0], previous_point[1] - centroid[1])
 
-                    if math.sqrt(aux[0] ** 2 + aux[1] ** 2) > 50:
-                        cv2.circle(frame, centroid, radius, painting_color, -1)
+                    if math.sqrt(aux[0] ** 2 + aux[1] ** 2) > 320:
+                        cv2.circle(whiteboard, centroid, radius, painting_color, -1)
                     else:
                         cv2.line(img=whiteboard,
                                  pt1=previous_point,
