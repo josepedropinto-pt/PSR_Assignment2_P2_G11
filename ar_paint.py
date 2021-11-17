@@ -7,7 +7,6 @@ import numpy as np
 import json
 from time import ctime, time
 from numpy.linalg import norm
-
 import readchar
 from colorama import Fore, Back, Style
 from termcolor import cprint
@@ -24,10 +23,11 @@ global mouse_coordinates
 mouse_toggle = False
 global whiteboard
 previous_mouse_point = (0, 0)
-wbinsteadframe = False
 global drawing_mode
 x_previous = 0
 y_previous = 0
+global frame_painting
+alpha = 1
 
 
 # def onShapes(cursor, xposition, yposition, flags, param):
@@ -72,7 +72,7 @@ def onMouse(cursor, xposition, yposition, flags, param):
 
 def main():
     # Global variables
-    global radius, painting_color, previous_point, mouse_toggle
+    global radius, painting_color, previous_point, mouse_toggle, frame_painting, alpha
 
     # Argparse arguments for program Initialization
     parser = argparse.ArgumentParser()
@@ -109,10 +109,16 @@ def main():
     print("- TO QUIT       " + u"\U000026D4" + "   -> PRESS 'q'")
     print("- TO CLEAR      " + u"\U0001F195" + "   -> PRESS 'c'")
     print("- TO SAVE       " + u"\U0001f4be" + "   -> PRESS 'w'")
-    print("- RED PAINT   " + Back.RED + "      " + Style.RESET_ALL + " -> PRESS " + Fore.RED + "'r'" + Fore.RESET)
-    print("- GREEN PAINT " + Back.GREEN + "      " + Style.RESET_ALL + " -> PRESS " + Fore.GREEN + "'g'" + Fore.RESET)
-    print("- BLUE PAINT  " + Back.BLUE + "      " + Style.RESET_ALL + " -> PRESS " + Fore.BLUE + "'b'" + Fore.RESET)
-    print("- ERASE       " + Back.WHITE + "      " + Style.RESET_ALL + " -> PRESS 'e'")
+    print("- RED PAINT    " + Back.RED + "      " + Style.RESET_ALL + " -> PRESS " + Fore.RED + "'r'" + Fore.RESET)
+    print("- GREEN PAINT  " + Back.GREEN + "      " + Style.RESET_ALL + " -> PRESS " + Fore.GREEN + "'g'" + Fore.RESET)
+    print("- BLUE PAINT   " + Back.BLUE + "      " + Style.RESET_ALL + " -> PRESS " + Fore.BLUE + "'b'" + Fore.RESET)
+    print("- PINK PAINT   " + Back.MAGENTA + "      " + Style.RESET_ALL + " -> PRESS " + Fore.MAGENTA + "'p'" + Fore.RESET)
+    print("- ORANGE PAINT " + Back.LIGHTRED_EX + "      " + Style.RESET_ALL + " -> PRESS " + Fore.LIGHTRED_EX + "'o'" + Fore.RESET)
+    print("- YELLOW PAINT " + Back.LIGHTYELLOW_EX + "      " + Style.RESET_ALL + " -> PRESS " + Fore.LIGHTYELLOW_EX + "'b'" + Fore.RESET)
+    print("- ERASE        " + Back.WHITE + "      " + Style.RESET_ALL + " -> PRESS 'e'")
+    print("-TRANSPARENCY +" + " \u2b1c " + "   -> PRESS " + Fore.GREEN + "'h'" + Fore.RESET )
+    print("-TRANSPARENCY -" + " \U0001f533" + "   -> PRESS " + Fore.RED + "'l'" + Fore.RESET)
+
     print("- MOUSE MODE    " + u"\U0001F5B1" + "    -> PRESS 'm'")
     print("- SCREEN MODE   " + u"\U0001F4FA" + "   -> PRESS 'o'")
     print("- THICKER BRUSH " + u"\U0001F58C" + "    -> PRESS '" + "+" + "'")
@@ -125,7 +131,7 @@ def main():
 
     if args['augmented_reality']:
         whiteboard = np.ones((width, height, channel), np.uint8)
-        painting_color = (255,0,0)
+        painting_color = (255, 0, 0)
     else:
         whiteboard = np.ones((width, height, channel), np.uint8) * 255
 
@@ -214,9 +220,10 @@ def main():
                              color=painting_color,
                              thickness=radius)
                     previous_point = centroid
-
-        if args['augmented_reality'] == True:
+        if args['augmented_reality']:
             frame_painting = cv2.bitwise_or(frame, whiteboard)
+
+            frame_painting = cv2.addWeighted(frame_painting, alpha, frame, 1 - alpha, 0)
 
             # Defining the window and plotting the image_segmented
             cv2.namedWindow(window_segmented, cv2.WINDOW_NORMAL)
@@ -260,9 +267,25 @@ def main():
             painting_color = (255, 0, 0)
             print('Pencil color ' + Fore.BLUE + 'Blue' + Fore.RESET)
 
+        elif key == ord('p'):
+            painting_color = (180, 105, 255)
+            print('Pencil color ' + Fore.MAGENTA + 'Pink' + Fore.RESET)
+
+        elif key == ord('y'):
+            painting_color = (0, 255, 255)
+            print('Pencil color ' + Fore.LIGHTYELLOW_EX + 'Yellow' + Fore.RESET)
+
+        elif key == ord('o'):
+            painting_color = (0, 165, 255)
+            print('Pencil color ' + Fore.LIGHTRED_EX + 'Orange' + Fore.RESET)
+
         elif key == ord('e'):
-            painting_color = (255,255,255)
-            print('You Turned the ' + Fore.BLUE + 'Eraser' + Fore.RESET + ' on.')
+            if args['augmented_reality']:
+                painting_color = (0, 0, 0)
+                print('You Turned the ' + Fore.BLUE + 'Eraser' + Fore.RESET + ' on.')
+            else:
+                painting_color = (255, 255, 255)
+                print('You Turned the ' + Fore.BLUE + 'Eraser' + Fore.RESET + ' on.')
 
         elif key == ord('+'):
             radius += 1
@@ -277,15 +300,36 @@ def main():
                 print('Pencil size' + Fore.RED +
                       ' decreased ' + Fore.RESET + 'to ' + str(radius))
 
+        elif key == ord('h'):
+            alpha -= 0.05
+            print('Transparency ' + Fore.GREEN +
+                  ' set to  ' + Fore.RESET + str(100-(round(alpha*100))) + '%')
+
+        elif key == ord('l'):
+            alpha += 0.05
+            print('Transparency ' + Fore.RED +
+                  ' set to ' + Fore.RESET + str(100-(round(alpha * 100))) + '%')
+
         elif key == ord('c'):
-            whiteboard = np.ones((width, height, channel), np.uint8) * 255
-            cprint('Nice job, you just killed a masterpiece...'
-                   , color='white', on_color='on_red', attrs=['blink'])
+            if args['augmented_reality']:
+                whiteboard = np.ones((width, height, channel), np.uint8)
+                cprint('Nice job, you just killed a masterpiece...'
+                       , color='white', on_color='on_red', attrs=['blink'])
+
+            else:
+                whiteboard = np.ones((width, height, channel), np.uint8) * 255
+                cprint('Nice job, you just killed a masterpiece...'
+                       , color='white', on_color='on_red', attrs=['blink'])
 
         elif key == ord('w'):
-            time_string = ctime(time()).replace(' ', '_')
-            file_name = "Drawing_" + time_string + ".png"
-            cv2.imwrite(file_name, whiteboard)
+            if args['augmented_reality']:
+                time_string = ctime(time()).replace(' ', '_')
+                file_name = "Drawing_" + time_string + ".png"
+                cv2.imwrite(file_name, frame_painting)
+            else:
+                time_string = ctime(time()).replace(' ', '_')
+                file_name = "Drawing_" + time_string + ".png"
+                cv2.imwrite(file_name, whiteboard)
 
         elif args['use_shake_prevention'] and key == ord('m'):
             mouse_toggle = True
