@@ -13,7 +13,7 @@ from colorama import Fore, Back, Style
 from termcolor import cprint
 import copy
 from pynput.keyboard import Key, Controller
-import keyboard
+# import keyboard
 
 
 # Variable initializing values
@@ -106,17 +106,17 @@ def main():
     print('''
     Here is your Command List
     ------------------------- ''')
-    print("- TO QUIT       " + u"\U000026D4" + "    -> PRESS 'q'")
+    print("- TO QUIT       " + u"\U000026D4" + "   -> PRESS 'q'")
     print("- TO CLEAR      " + u"\U0001F195" + "   -> PRESS 'c'")
     print("- TO SAVE       " + u"\U0001f4be" + "   -> PRESS 'w'")
     print("- RED PAINT   " + Back.RED + "      " + Style.RESET_ALL + " -> PRESS " + Fore.RED + "'r'" + Fore.RESET)
     print("- GREEN PAINT " + Back.GREEN + "      " + Style.RESET_ALL + " -> PRESS " + Fore.GREEN + "'g'" + Fore.RESET)
     print("- BLUE PAINT  " + Back.BLUE + "      " + Style.RESET_ALL + " -> PRESS " + Fore.BLUE + "'b'" + Fore.RESET)
     print("- ERASE       " + Back.WHITE + "      " + Style.RESET_ALL + " -> PRESS 'e'")
-    print("- MOUSE MODE    " + u"\U0001F5B0" + "   -> PRESS 'm'")
-    print("- SCREEN MODE   " + u"\U0001F5AF" + "   -> PRESS 'o'")
-    print("- THICKER BRUSH " + u"\U0001F58C" + "   -> PRESS '" + "+" + "'")
-    print("- THINNER BRUSH " + u"\U0001F58C" + "   -> PRESS '-'")
+    print("- MOUSE MODE    " + u"\U0001F5B1" + "    -> PRESS 'm'")
+    print("- SCREEN MODE   " + u"\U0001F4FA" + "   -> PRESS 'o'")
+    print("- THICKER BRUSH " + u"\U0001F58C" + "    -> PRESS '" + "+" + "'")
+    print("- THINNER BRUSH " + u"\U0001F58C" + "    -> PRESS '-'")
 
     # Initialize canvas size with one video capture
     capture = cv2.VideoCapture(0)
