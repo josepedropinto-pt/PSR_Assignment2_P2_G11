@@ -12,7 +12,7 @@ import readchar
 from colorama import Fore, Back, Style
 from termcolor import cprint
 import copy
-from pynput.keyboard import Key, Controller
+# from pynput.keyboard import Key, Controller
 # import keyboard
 
 
@@ -30,22 +30,22 @@ x_previous = 0
 y_previous = 0
 
 
-def onShapes(cursor, xposition, yposition, flags, param):
-    shape = readchar.readkey()
-    if shape == ord('s'):
-        print('Drawing square')
-    elif shape == ord('o'):
-        print('drawing circle')
-
-
-    if cursor == cv2.EVENT_MOUSEMOVE:
-         previous_draw = (x_previous, y_previous)
-         centroid= (xposition, yposition)
-         final_point = (yposition -y_previous, xposition-x_previous)
-         radius_draw = norm(final_point)
-         print(radius_draw)
-
-         cv2.circle(param, (xposition, yposition), 10, painting_color, -1)
+# def onShapes(cursor, xposition, yposition, flags, param):
+#     shape = readchar.readkey()
+#     if shape == ord('s'):
+#         print('Drawing square')
+#     elif shape == ord('o'):
+#         print('drawing circle')
+#
+#
+#     if cursor == cv2.EVENT_MOUSEMOVE:
+#          previous_draw = (x_previous, y_previous)
+#          centroid= (xposition, yposition)
+#          final_point = (yposition -y_previous, xposition-x_previous)
+#          radius_draw = norm(final_point)
+#          print(radius_draw)
+#
+#          cv2.circle(param, (xposition, yposition), 10, painting_color, -1)
 
 
 def onMouse(cursor, xposition, yposition, flags, param):
@@ -164,6 +164,10 @@ def main():
                 # Extract coordinates of bounding box
                 x, y, w, h = cv2.boundingRect(c)
 
+                # Draw a green rectangle around the drawer object
+                cv2.rectangle(image_for_segmentation, (x,y), (x + w + 20, y + h + 20), (0,255,0), -1)
+                frame = cv2.addWeighted(image_for_segmentation, 0.2, frame, 0.8, 0)
+
                 # Calculate centroid and draw the red cross there
                 centroid = (int(x + w / 2), int(y + h / 2))
                 cv2.drawMarker(frame, centroid,
@@ -240,7 +244,7 @@ def main():
             cv2.imshow(window_original_frame, frame)
 
         key = cv2.waitKey(10)
-        keyboard = Controller()
+        # keyboard = Controller()
 
         # Defining all keyboard shortcuts and there functions
         if key == ord('r'):
@@ -291,10 +295,10 @@ def main():
             mouse_toggle = False
             print('You can no longer use your mouse to paint')
 
-        elif key == ord('d'):
-            drawing_mode = True
-            print('draw')
-            cv2.setMouseCallback(window_whiteboard, onShapes, param=whiteboard)
+        # elif key == ord('d'):
+        #     drawing_mode = True
+        #     print('draw')
+        #     cv2.setMouseCallback(window_whiteboard, onShapes, param=whiteboard)
 
         elif key == ord('q'):
             break
