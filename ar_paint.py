@@ -12,6 +12,7 @@ from colorama import Fore, Back, Style
 from termcolor import cprint
 import color_by_numbers
 
+
 # Variable initializing values
 radius = 10
 painting_color = (0, 0, 0)
@@ -27,6 +28,7 @@ global frame_painting
 alpha = 1
 global canvas
 global color_0, color_1, color_2, color_3
+
 
 def onMouse(cursor, xposition, yposition, flags, param):
     global previous_mouse_point
@@ -489,7 +491,6 @@ def main():
         elif key == ord('3'):
             painting_color = color_3
             print('Painting with color 3 of Paint by numbers')
-
 
         elif key == ord('q'):
             break
