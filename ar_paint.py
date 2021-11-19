@@ -3,19 +3,15 @@
 import argparse
 import math
 import cv2
-import keyboard_func
 import numpy as np
 import json
 from time import ctime, time
 from numpy.linalg import norm
 import readchar
 from colorama import Fore, Back, Style
-from pyglet import window
 from termcolor import cprint
 import color_by_numbers
-import pyglet
-import pyglet.window.key
-import keyboard_func
+
 
 
 # Variable initializing values
@@ -31,7 +27,8 @@ x_previous = 0
 y_previous = 0
 global frame_painting
 alpha = 1
-
+global canvas
+global color_0, color_1, color_2, color_3
 
 def onMouse(cursor, xposition, yposition, flags, param):
     global previous_mouse_point
@@ -57,8 +54,8 @@ def onMouse(cursor, xposition, yposition, flags, param):
 
 def main():
     # Global variables
-    global radius, painting_color, previous_point, mouse_toggle, frame_painting, alpha, path_color_by_numbers
-
+    global radius, painting_color, previous_point, mouse_toggle, frame_painting, alpha, path_color_by_numbers, canvas
+    global color_0, color_1, color_2, color_3
     # Argparse arguments for program Initialization
     parser = argparse.ArgumentParser()
 
@@ -98,8 +95,125 @@ def main():
 
     # Import color by numbers function
     if args['color_by_numbers']:
-        color_by_numbers.main('./pinguim.jpg', 4)
-        # cv2.imshow('Image to pain by number', )
+        color = color_by_numbers.main('python.jpg', 4)
+
+        dn = 15
+
+        color_0 = (color[0][2], color[0][1], color[0][0])
+        color_1 = (color[1][2], color[1][1], color[1][0])
+        color_2 = (color[2][2], color[2][1], color[2][0])
+        color_3 = (color[3][2], color[3][1], color[3][0])
+
+
+
+        color_0_up = np.array([color[0][2] + dn, color[0][1] + dn, color[0][0] + dn])
+        color_0_down = np.array([color[0][2] - dn, color[0][1] - dn, color[0][0] - dn])
+
+        color_1_up = np.array([color[1][2] + dn, color[1][1] + dn, color[1][0] + dn])
+        color_1_down = np.array([color[1][2] - dn, color[1][1] - dn, color[1][0] - dn])
+
+        color_2_up = np.array([color[2][2] + dn, color[2][1] + dn, color[2][0] + dn])
+        color_2_down = np.array([color[2][2] - dn, color[2][1] - dn, color[2][0] - dn])
+
+        color_3_up = np.array([color[3][2] + dn, color[3][1] + dn, color[3][0] + dn])
+        color_3_down = np.array([color[3][2] - dn, color[3][1] - dn, color[3][0] - dn])
+
+        colors = [color_0_up, color_0_down, color_1_up, color_1_down,
+                  color_2_up, color_2_down, color_3_up, color_3_down]
+
+        for j in range(len(colors)):
+            for i in range(3):
+
+                if colors[j][i] < 0:
+                    colors[j][i] = 0
+
+                elif colors[j][i] > 255:
+                    colors[j][i] = 255
+
+        # Original image initializing
+        original = cv2.imread('python.jpg', 1)
+        cv2.namedWindow('Original', cv2.WINDOW_NORMAL)
+        cv2.imshow('Original', original)
+
+        # original = cv.cvtColor(original, cv.COLOR_BGR2RGB)
+        (width, height, channel) = original.shape
+        canvas = np.ones((width, height, channel), np.uint8) * 255
+
+        mask_color0 = cv2.inRange(original, color_0_down, color_0_up)
+        mask_color1 = cv2.inRange(original, color_1_down, color_1_up)
+        mask_color2 = cv2.inRange(original, color_2_down, color_2_up)
+        mask_color3 = cv2.inRange(original, color_3_down, color_3_up)
+
+        # cv.imshow('mask_color_0', mask_color0)
+        # cv.imshow('mask_color_1', mask_color1)
+        # cv.imshow('mask_color_2', mask_color2)
+
+        mask_color0 = cv2.GaussianBlur(mask_color0, (5, 5), 0)
+        mask_color1 = cv2.GaussianBlur(mask_color1, (5, 5), 0)
+        mask_color2 = cv2.GaussianBlur(mask_color2, (5, 5), 0)
+        mask_color3 = cv2.GaussianBlur(mask_color3, (5, 5), 0)
+
+        contours_0, hierarchy = cv2.findContours(
+            mask_color0, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+        cv2.drawContours(canvas, contours_0, -1, (0, 0, 0), 4)
+
+        contours_1, hierarchy = cv2.findContours(
+            mask_color1, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        cv2.drawContours(canvas, contours_1, -1, (0, 0, 0), 4)
+
+        contours_2, hierarchy = cv2.findContours(
+            mask_color2, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        cv2.drawContours(canvas, contours_2, -1, (0, 0, 0), 4)
+
+        contours_3, hierarchy = cv2.findContours(
+            mask_color3, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        cv2.drawContours(canvas, contours_3, -1, (0, 0, 0), 4)
+
+        for c_0 in contours_0:
+            M = cv2.moments(c_0)
+            cX_0 = int(M["m10"] / M["m00"])
+            cY_0 = int(M["m01"] / M["m00"])
+
+            # draw the contour and center of the shape on the image
+            cv2.drawContours(canvas, [c_0], -1, (0, 0, 0), 2)
+            cv2.putText(canvas, str(0), (30, 30),
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
+
+        for c_1 in contours_1:
+            M = cv2.moments(c_1)
+            cX_1 = int(M["m10"] / M["m00"])
+            cY_1 = int(M["m01"] / M["m00"])
+
+            # draw the contour and center of the shape on the image
+            cv2.drawContours(canvas, [c_1], -1, (0, 0, 0), 2)
+            cv2.putText(canvas, str(1), (cX_1, cY_1),
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
+
+        for c_2 in contours_2:
+            M = cv2.moments(c_2)
+            cX_2 = int(M["m10"] / M["m00"])
+            cY_2 = int(M["m01"] / M["m00"])
+
+            # draw the contour and center of the shape on the image
+            cv2.drawContours(canvas, [c_2], -1, (0, 0, 0), 2)
+            cv2.putText(canvas, str(2), (cX_2, cY_2),
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
+
+        for c_3 in contours_3:
+            M = cv2.moments(c_3)
+            cX_3 = int(M["m10"] / M["m00"])
+            cY_3 = int(M["m01"] / M["m00"])
+
+            # draw the contour and center of the shape on the image
+            cv2.drawContours(canvas, [c_3], -1, (0, 0, 0), 2)
+            cv2.putText(canvas, str(3), (cX_3, cY_3),
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
+
+        pie_chart = cv2.imread('pie_chart.png', 1)
+
+        cv2.namedWindow('color map', cv2.WINDOW_NORMAL)
+        cv2.imshow('color map', pie_chart)
+
     # Print list of Commands
     print('''
     Here is your Command List
@@ -186,7 +300,8 @@ def main():
                     previous_point = centroid
 
                 # User shake prevention working without mouse functionality
-                if args['use_shake_prevention'] and mouse_toggle == False and args['augmented_reality'] == False:
+                if args['use_shake_prevention'] and mouse_toggle == False and args['augmented_reality'] == False\
+                        and args['color_by_numbers']== False:
                     aux = (previous_point[0] - centroid[0], previous_point[1] - centroid[1])
 
                     if math.sqrt(aux[0] ** 2 + aux[1] ** 2) > 320:
@@ -201,12 +316,12 @@ def main():
 
                 # Only draw with mouse moving functionality
                 elif mouse_toggle == True and args['use_shake_prevention'] == True and args[
-                    'augmented_reality'] == False:
+                    'augmented_reality'] == False and args['color_by_numbers']== False:
                     cv2.setMouseCallback(window_whiteboard, onMouse, param=whiteboard)
 
                 # Normal mode without mouse functionality and USP
                 elif mouse_toggle == False and args['use_shake_prevention'] == False and args[
-                    'augmented_reality'] == False:
+                    'augmented_reality'] == False and args['color_by_numbers']== False:
                     cv2.line(img=whiteboard,
                              pt1=previous_point,
                              pt2=centroid,
@@ -214,6 +329,14 @@ def main():
                              thickness=radius)
                     previous_point = centroid
 
+                elif mouse_toggle == False and args['use_shake_prevention'] == False and args[
+                    'augmented_reality'] == False and args['color_by_numbers']== True:
+                    cv2.line(img=canvas,
+                             pt1=previous_point,
+                             pt2=centroid,
+                             color=painting_color,
+                             thickness=radius)
+                    previous_point = centroid
                 else:
                     cv2.line(img=whiteboard,
                              pt1=previous_point,
@@ -237,6 +360,19 @@ def main():
             # Display the new image using frame as whiteboard
             cv2.namedWindow('Frame Painting', cv2.WINDOW_NORMAL)
             cv2.imshow('Frame Painting', frame_painting)
+
+        elif args['color_by_numbers']:
+            # Defining the window and plotting the image_segmented
+            cv2.namedWindow(window_segmented, cv2.WINDOW_NORMAL)
+            cv2.imshow(window_segmented, mask_segmented)
+
+            # Defining the window and plotting the original frame
+            cv2.namedWindow(window_original_frame, cv2.WINDOW_NORMAL)
+            cv2.imshow(window_original_frame, frame)
+
+            # Display the new image using frame as whiteboard
+            cv2.namedWindow('canvas', cv2.WINDOW_NORMAL)
+            cv2.imshow('canvas', canvas)
 
         else:
             # Defining the window and plotting the whiteboard
@@ -340,12 +476,25 @@ def main():
             mouse_toggle = False
             print('You can no longer use your mouse to paint')
 
-        # elif key == ord('s'):
-        #     print('fds')
+        elif key == ord('0'):
+            painting_color = color_0
+            print('Painting with color 0 of Paint by numbers')
+
+        elif key == ord('1'):
+            painting_color = color_1
+            print('Painting with color 1 of Paint by numbers')
+
+        elif key == ord('2'):
+            painting_color = color_2
+            print('Painting with color 2 of Paint by numbers')
+
+        elif key == ord('3'):
+            painting_color = color_3
+            print('Painting with color 3 of Paint by numbers')
+
 
         elif key == ord('q'):
             break
-
 
 
 if __name__ == "__main__":
