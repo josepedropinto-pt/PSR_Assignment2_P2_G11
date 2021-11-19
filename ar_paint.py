@@ -3,16 +3,19 @@
 import argparse
 import math
 import cv2
+import keyboard_func
 import numpy as np
 import json
 from time import ctime, time
 from numpy.linalg import norm
 import readchar
 from colorama import Fore, Back, Style
+from pyglet import window
 from termcolor import cprint
-import copy
-# from pynput.keyboard import Key, Controller
-# import keyboard
+import color_by_numbers
+import pyglet
+import pyglet.window.key
+import keyboard_func
 
 
 # Variable initializing values
@@ -28,24 +31,6 @@ x_previous = 0
 y_previous = 0
 global frame_painting
 alpha = 1
-
-
-# def onShapes(cursor, xposition, yposition, flags, param):
-#     shape = readchar.readkey()
-#     if shape == ord('s'):
-#         print('Drawing square')
-#     elif shape == ord('o'):
-#         print('drawing circle')
-#
-#
-#     if cursor == cv2.EVENT_MOUSEMOVE:
-#          previous_draw = (x_previous, y_previous)
-#          centroid= (xposition, yposition)
-#          final_point = (yposition -y_previous, xposition-x_previous)
-#          radius_draw = norm(final_point)
-#          print(radius_draw)
-#
-#          cv2.circle(param, (xposition, yposition), 10, painting_color, -1)
 
 
 def onMouse(cursor, xposition, yposition, flags, param):
@@ -72,23 +57,31 @@ def onMouse(cursor, xposition, yposition, flags, param):
 
 def main():
     # Global variables
-    global radius, painting_color, previous_point, mouse_toggle, frame_painting, alpha
+    global radius, painting_color, previous_point, mouse_toggle, frame_painting, alpha, path_color_by_numbers
 
     # Argparse arguments for program Initialization
     parser = argparse.ArgumentParser()
+
     parser.add_argument('-j',
                         '--json_JSON',
                         type=str,
                         required=True,
                         help='Full path to json file.')
+
     parser.add_argument('-usp',
                         '--use_shake_prevention',
                         action='store_true',
                         help='To use shake prevention.')
+
     parser.add_argument('-ar',
                         '--augmented_reality',
                         action='store_true',
                         help='To draw on displayed frame')
+
+    parser.add_argument('-pn',
+                        '--color_by_numbers',
+                        action='store_true',
+                        help='Path to file to paint by numbers')
 
     args = vars(parser.parse_args())
 
@@ -102,6 +95,11 @@ def main():
     ranges = json.load(lim)
     lim.close()
 
+
+    # Import color by numbers function
+    if args['color_by_numbers']:
+        color_by_numbers.main('./pinguim.jpg', 4)
+        # cv2.imshow('Image to pain by number', )
     # Print list of Commands
     print('''
     Here is your Command List
@@ -112,15 +110,17 @@ def main():
     print("- RED PAINT    " + Back.RED + "      " + Style.RESET_ALL + " -> PRESS " + Fore.RED + "'r'" + Fore.RESET)
     print("- GREEN PAINT  " + Back.GREEN + "      " + Style.RESET_ALL + " -> PRESS " + Fore.GREEN + "'g'" + Fore.RESET)
     print("- BLUE PAINT   " + Back.BLUE + "      " + Style.RESET_ALL + " -> PRESS " + Fore.BLUE + "'b'" + Fore.RESET)
-    print("- PINK PAINT   " + Back.MAGENTA + "      " + Style.RESET_ALL + " -> PRESS " + Fore.MAGENTA + "'p'" + Fore.RESET)
-    print("- ORANGE PAINT " + Back.LIGHTRED_EX + "      " + Style.RESET_ALL + " -> PRESS " + Fore.LIGHTRED_EX + "'o'" + Fore.RESET)
-    print("- YELLOW PAINT " + Back.LIGHTYELLOW_EX + "      " + Style.RESET_ALL + " -> PRESS " + Fore.LIGHTYELLOW_EX + "'b'" + Fore.RESET)
+    print(
+        "- PINK PAINT   " + Back.MAGENTA + "      " + Style.RESET_ALL + " -> PRESS " + Fore.MAGENTA + "'p'" + Fore.RESET)
+    print(
+        "- ORANGE PAINT " + Back.LIGHTRED_EX + "      " + Style.RESET_ALL + " -> PRESS " + Fore.LIGHTRED_EX + "'o'" + Fore.RESET)
+    print(
+        "- YELLOW PAINT " + Back.LIGHTYELLOW_EX + "      " + Style.RESET_ALL + " -> PRESS " + Fore.LIGHTYELLOW_EX + "'b'" + Fore.RESET)
     print("- ERASE        " + Back.WHITE + "      " + Style.RESET_ALL + " -> PRESS 'e'")
-    print("-TRANSPARENCY +" + " \u2b1c " + "   -> PRESS " + Fore.GREEN + "'h'" + Fore.RESET )
+    print("-TRANSPARENCY +" + " \u2b1c " + "   -> PRESS " + Fore.GREEN + "'h'" + Fore.RESET)
     print("-TRANSPARENCY -" + " \U0001f533" + "   -> PRESS " + Fore.RED + "'l'" + Fore.RESET)
-
     print("- MOUSE MODE    " + u"\U0001F5B1" + "    -> PRESS 'm'")
-    print("- SCREEN MODE   " + u"\U0001F4FA" + "   -> PRESS 'o'")
+    print("- MOUSE MODE OFF  " + u"\U0001F4FA" + "   -> PRESS 'o'")
     print("- THICKER BRUSH " + u"\U0001F58C" + "    -> PRESS '" + "+" + "'")
     print("- THINNER BRUSH " + u"\U0001F58C" + "    -> PRESS '-'")
 
@@ -171,7 +171,7 @@ def main():
                 x, y, w, h = cv2.boundingRect(c)
 
                 # Draw a green rectangle around the drawer object
-                cv2.rectangle(image_for_segmentation, (x,y), (x + w + 20, y + h + 20), (0,255,0), -1)
+                cv2.rectangle(image_for_segmentation, (x, y), (x + w + 20, y + h + 20), (0, 255, 0), -1)
                 frame = cv2.addWeighted(image_for_segmentation, 0.2, frame, 0.8, 0)
 
                 # Calculate centroid and draw the red cross there
@@ -205,7 +205,8 @@ def main():
                     cv2.setMouseCallback(window_whiteboard, onMouse, param=whiteboard)
 
                 # Normal mode without mouse functionality and USP
-                elif mouse_toggle == False and args['use_shake_prevention'] == False and args['augmented_reality'] == False:
+                elif mouse_toggle == False and args['use_shake_prevention'] == False and args[
+                    'augmented_reality'] == False:
                     cv2.line(img=whiteboard,
                              pt1=previous_point,
                              pt2=centroid,
@@ -303,12 +304,12 @@ def main():
         elif key == ord('h'):
             alpha -= 0.05
             print('Transparency ' + Fore.GREEN +
-                  ' set to  ' + Fore.RESET + str(100-(round(alpha*100))) + '%')
+                  ' set to  ' + Fore.RESET + str(100 - (round(alpha * 100))) + '%')
 
         elif key == ord('l'):
             alpha += 0.05
             print('Transparency ' + Fore.RED +
-                  ' set to ' + Fore.RESET + str(100-(round(alpha * 100))) + '%')
+                  ' set to ' + Fore.RESET + str(100 - (round(alpha * 100))) + '%')
 
         elif key == ord('c'):
             if args['augmented_reality']:
@@ -339,13 +340,12 @@ def main():
             mouse_toggle = False
             print('You can no longer use your mouse to paint')
 
-        # elif key == ord('d'):
-        #     drawing_mode = True
-        #     print('draw')
-        #     cv2.setMouseCallback(window_whiteboard, onShapes, param=whiteboard)
+        # elif key == ord('s'):
+        #     print('fds')
 
         elif key == ord('q'):
             break
+
 
 
 if __name__ == "__main__":
