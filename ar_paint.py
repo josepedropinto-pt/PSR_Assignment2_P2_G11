@@ -12,8 +12,6 @@ from colorama import Fore, Back, Style
 from termcolor import cprint
 import color_by_numbers
 
-
-
 # Variable initializing values
 radius = 10
 painting_color = (0, 0, 0)
