@@ -44,7 +44,7 @@ painting_color = (0, 0, 0)
 previous_point = (0, 0)
 previous_point_hp = (0, 0)
 previous_mouse_point = (0, 0)
-previous_point_shape = (0, 0)
+global previous_point_shape
 centroid_finger = (0, 0)
 x_previous = 0
 y_previous = 0
@@ -57,6 +57,34 @@ alpha = 1
 # ---------------------------------------------------
 # Function for shape drawing
 # ---------------------------------------------------
+def print_menu():
+    print('''
+    Here is your Command List
+    ------------------------- ''')
+    print("- TO QUIT       " + u"\U000026D4" + "    -> PRESS 'q'")
+    print("- TO CLEAR      " + u"\U0001F195" + "    -> PRESS 'c'")
+    print("- TO SAVE       " + u"\U0001f4be" + "    -> PRESS 'w'")
+    print("- RED PAINT    " + Back.RED + "      " + Style.RESET_ALL + " -> PRESS " + Fore.RED + "'r'" + Fore.RESET)
+    print("- GREEN PAINT  " + Back.GREEN + "      " + Style.RESET_ALL + " -> PRESS " + Fore.GREEN + "'g'" + Fore.RESET)
+    print("- BLUE PAINT   " + Back.BLUE + "      " + Style.RESET_ALL + " -> PRESS " + Fore.BLUE + "'b'" + Fore.RESET)
+    print(
+        "- PINK PAINT   " + Back.MAGENTA + "      " + Style.RESET_ALL + " -> PRESS " + Fore.MAGENTA + "'p'" + Fore.RESET)
+    print(
+        "- ORANGE PAINT " + Back.LIGHTRED_EX + "      " + Style.RESET_ALL + " -> PRESS " + Fore.LIGHTRED_EX + "'o'" + Fore.RESET)
+    print("- YELLOW PAINT " + Back.LIGHTYELLOW_EX + "      " + Style.RESET_ALL + " -> PRESS "
+          + Fore.LIGHTYELLOW_EX + "'y'" + Fore.RESET)
+    print("- ERASE        " + Back.WHITE + "      " + Style.RESET_ALL + " -> PRESS 'e'")
+    print("-TRANSPARENCY +" + " \u2b1c " + "   -> PRESS " + Fore.GREEN + "'h'" + Fore.RESET)
+    print("-TRANSPARENCY -" + " \U0001f533" + "    -> PRESS " + Fore.RED + "'l'" + Fore.RESET)
+    print("- MOUSE MODE    " + u"\U0001F5B1" + "     -> PRESS 'm'")
+    print("- MOUSE MODE OFF " + u"\U0001F4FA" + "   -> PRESS 'n'")
+    print("- THICKER BRUSH " + u"\U0001F58C" + "     -> PRESS '" + "+" + "'")
+    print("- THINNER BRUSH " + u"\U0001F58C" + "     -> PRESS '-'")
+    print("- Paint color 0 " + u"\U0001f522" + "    -> PRESS '0'")
+    print("- Paint color 1 " + u"\U0001f522" + "    -> PRESS '1'")
+    print("- Paint color 2 " + u"\U0001f522" + "    -> PRESS '2'")
+    print("- Paint color 3 " + u"\U0001f522" + "    -> PRESS '3'")
+
 
 def onShapes(cursor, xposition, yposition, flags, param):
     # Call of global variables
@@ -64,10 +92,8 @@ def onShapes(cursor, xposition, yposition, flags, param):
 
     whiteboard_copy = param.copy()
     if draw_square == True or draw_circle == True:
-        print('Entrou')
         if previous_point_shape == (0, 0):
             previous_point_shape = (xposition, yposition)
-            print(previous_point_shape)
 
         (cX, cY) = (xposition, yposition)
         if draw_square:
@@ -80,12 +106,13 @@ def onShapes(cursor, xposition, yposition, flags, param):
         cv2.imshow('Pynting', whiteboard_copy)
 
     elif draw_square == False and what_to_draw == ord('s'):
-        print('Sair')
         cv2.rectangle(param, previous_point_shape, (cX, cY), painting_color,
                       radius)  # por o quadrado fixo no whiteboard
+        what_to_draw = None
         return
     elif draw_circle == False and what_to_draw == ord('d'):
         cv2.circle(param, previous_point_shape, int(circle_radius), painting_color, radius)
+        what_to_draw = None
         return
 
 
@@ -133,7 +160,7 @@ def onMouse(cursor, xposition, yposition, flags, param):
             previous_mouse_point = (xposition, yposition)
 
         aux = (previous_point[0] - xposition, previous_point[1] - yposition)
-        if math.sqrt(aux[0] ** 2 + aux[1] ** 2) > 320:
+        if math.sqrt(aux[0] ** 2 + aux[1] ** 2) > 200:
             cv2.circle(param, (xposition, yposition), radius, painting_color, -1)
         else:
             cv2.line(img=param,
@@ -153,6 +180,7 @@ def main():
     global alpha, path_color_by_numbers, canvas, draw_square, draw_circle, what_to_draw
     global color_0, color_1, color_2, color_3, width_canvas, height_canvas
     global whiteboard, rpoints, draw, my_hands, rgb_hand, previous_point_hp
+    count = 0   # Counter to print the menu after x iterations
 
     # ---------------------------------------------------
     # Definition of Parser Arguments
@@ -204,32 +232,7 @@ def main():
           "\n- Pedro Carvalho"
           " \n\nPSR, University of Aveiro, ""November 2021.\n")
 
-    print('''
-    Here is your Command List
-    ------------------------- ''')
-    print("- TO QUIT       " + u"\U000026D4" + "   -> PRESS 'q'")
-    print("- TO CLEAR      " + u"\U0001F195" + "   -> PRESS 'c'")
-    print("- TO SAVE       " + u"\U0001f4be" + "   -> PRESS 'w'")
-    print("- RED PAINT    " + Back.RED + "      " + Style.RESET_ALL + " -> PRESS " + Fore.RED + "'r'" + Fore.RESET)
-    print("- GREEN PAINT  " + Back.GREEN + "      " + Style.RESET_ALL + " -> PRESS " + Fore.GREEN + "'g'" + Fore.RESET)
-    print("- BLUE PAINT   " + Back.BLUE + "      " + Style.RESET_ALL + " -> PRESS " + Fore.BLUE + "'b'" + Fore.RESET)
-    print(
-        "- PINK PAINT   " + Back.MAGENTA + "      " + Style.RESET_ALL + " -> PRESS " + Fore.MAGENTA + "'p'" + Fore.RESET)
-    print(
-        "- ORANGE PAINT " + Back.LIGHTRED_EX + "      " + Style.RESET_ALL + " -> PRESS " + Fore.LIGHTRED_EX + "'o'" + Fore.RESET)
-    print("- YELLOW PAINT " + Back.LIGHTYELLOW_EX + "      " + Style.RESET_ALL + " -> PRESS "
-          + Fore.LIGHTYELLOW_EX + "'y'" + Fore.RESET)
-    print("- ERASE        " + Back.WHITE + "      " + Style.RESET_ALL + " -> PRESS 'e'")
-    print("-TRANSPARENCY +" + " \u2b1c " + "   -> PRESS " + Fore.GREEN + "'h'" + Fore.RESET)
-    print("-TRANSPARENCY -" + " \U0001f533" + "   -> PRESS " + Fore.RED + "'l'" + Fore.RESET)
-    print("- MOUSE MODE    " + u"\U0001F5B1" + "    -> PRESS 'm'")
-    print("- MOUSE MODE OFF " + u"\U0001F4FA" + "   -> PRESS 'n'")
-    print("- THICKER BRUSH " + u"\U0001F58C" + "    -> PRESS '" + "+" + "'")
-    print("- THINNER BRUSH " + u"\U0001F58C" + "    -> PRESS '-'")
-    print("- Paint color 0 " + u"\U0001f522" + "    -> PRESS '0'")
-    print("- Paint color 1 " + u"\U0001f522" + "    -> PRESS '1'")
-    print("- Paint color 2 " + u"\U0001f522" + "    -> PRESS '2'")
-    print("- Paint color 3 " + u"\U0001f522" + "    -> PRESS '3'")
+    print_menu()
 
     # ------------------------------------------------------------------------------------------------------#
 
@@ -455,7 +458,7 @@ def main():
                 if mode == 'usp_mode':
                     print('ajksdjaks')
                     aux = (previous_point[0] - centroid[0], previous_point[1] - centroid[1])
-                    if math.sqrt(aux[0] ** 2 + aux[1] ** 2) > 320:
+                    if math.sqrt(aux[0] ** 2 + aux[1] ** 2) > 200:
                         cv2.circle(whiteboard, centroid, radius, painting_color, -1)
                     else:
                         cv2.line(img=whiteboard,
@@ -490,7 +493,7 @@ def main():
                     previous_point = centroid
 
                 elif mode == 'normal_mode':
-                    print('im here normal')
+                    # print('im here normal')
                     cv2.line(img=whiteboard,
                              pt1=previous_point,
                              pt2=centroid,
@@ -574,6 +577,9 @@ def main():
             cv2.imshow(window_original_frame, frame)
 
         key = cv2.waitKey(10)
+        if count == 10:
+            print_menu()
+            count = 0
 
 # ------------------------------------------------------------------------------------------------------#
         # ---------------------------------------------------
@@ -583,27 +589,33 @@ def main():
         if key == ord('r'):
             painting_color = (0, 0, 255)
             print('Pencil color ' + Fore.RED + 'Red' + Fore.RESET)
+            count+=1
 
         elif key == ord('g'):
             painting_color = (0, 255, 0)
             print('Wow pencil color ' + Fore.GREEN + 'Green' + Fore.RESET
                   + ', what a great choice')
+            count += 1
 
         elif key == ord('b'):
             painting_color = (255, 0, 0)
             print('Pencil color ' + Fore.BLUE + 'Blue' + Fore.RESET)
+            count += 1
 
         elif key == ord('p'):
             painting_color = (180, 105, 255)
             print('Pencil color ' + Fore.MAGENTA + 'Pink' + Fore.RESET)
+            count += 1
 
         elif key == ord('y'):
             painting_color = (0, 255, 255)
             print('Pencil color ' + Fore.LIGHTYELLOW_EX + 'Yellow' + Fore.RESET)
+            count += 1
 
         elif key == ord('o'):
             painting_color = (0, 165, 255)
             print('Pencil color ' + Fore.LIGHTRED_EX + 'Orange' + Fore.RESET)
+            count += 1
 
         elif key == ord('e'):
             if args['augmented_reality']:
@@ -612,11 +624,13 @@ def main():
             else:
                 painting_color = (255, 255, 255)
                 print('You Turned the ' + Fore.BLUE + 'Eraser' + Fore.RESET + ' on.')
+            count += 1
 
         elif key == ord('+'):
             radius += 1
             print('Pencil size' + Fore.GREEN +
                   ' increased ' + Fore.RESET + 'to ' + str(radius))
+            count += 1
 
         elif key == ord('-'):
             if radius == 1:
@@ -625,16 +639,19 @@ def main():
                 radius -= 1
                 print('Pencil size' + Fore.RED +
                       ' decreased ' + Fore.RESET + 'to ' + str(radius))
+            count += 1
 
         elif key == ord('h'):
             alpha -= 0.05
             print('Transparency ' + Fore.GREEN +
                   ' set to  ' + Fore.RESET + str(100 - (round(alpha * 100))) + '%')
+            count += 1
 
         elif key == ord('l'):
             alpha += 0.05
             print('Transparency ' + Fore.RED +
                   ' set to ' + Fore.RESET + str(100 - (round(alpha * 100))) + '%')
+            count += 1
 
         elif key == ord('c'):
             if args['augmented_reality']:
@@ -646,6 +663,7 @@ def main():
                 whiteboard = np.ones((width_frame, height_frame, channel), np.uint8) * 255
                 cprint('Nice job, you just killed a masterpiece...',
                        color='white', on_color='on_red', attrs=['blink'])
+            count += 1
 
         elif key == ord('w'):
             if args['augmented_reality']:
@@ -656,30 +674,37 @@ def main():
                 time_string = ctime(time()).replace(' ', '_')
                 file_name = "Drawing_" + time_string + ".png"
                 cv2.imwrite(file_name, whiteboard)
+            count += 1
 
         elif args['use_shake_prevention'] and key == ord('m'):
             mouse_toggle = True
             print('Now you can move your mouse to paint')
+            count += 1
 
         elif args['use_shake_prevention'] and key == ord('n'):
             mouse_toggle = False
             print('You can no longer use your mouse to paint')
+            count += 1
 
         elif key == ord('0'):
             painting_color = color_0
             print('Painting with color 0 of Paint by numbers')
+            count += 1
 
         elif key == ord('1'):
             painting_color = color_1
             print('Painting with color 1 of Paint by numbers')
+            count += 1
 
         elif key == ord('2'):
             painting_color = color_2
             print('Painting with color 2 of Paint by numbers')
+            count += 1
 
         elif key == ord('3'):
             painting_color = color_3
             print('Painting with color 3 of Paint by numbers')
+            count += 1
 
         elif key == ord('s'):
             print('Draw Square')
@@ -689,6 +714,7 @@ def main():
             draw_square = not draw_square
             what_to_draw = key
             cv2.setMouseCallback(window_whiteboard, onShapes, param=whiteboard)
+            count += 1
 
         elif key == ord('d'):
             print('Draw Circle')
@@ -698,6 +724,7 @@ def main():
             draw_circle = not draw_circle
             what_to_draw = key
             cv2.setMouseCallback(window_whiteboard, onShapes, param=whiteboard)
+            count += 1
 
         elif key == ord('q'):
             cprint("\nThank you for using AR Paint, hope to you see you again soon\n", color='white',
