@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 # ---------------------------------------------------
-# List of Required Modules import
+# List of Required Modules to Import
 # ---------------------------------------------------
 import argparse
 import math
@@ -12,6 +12,8 @@ from time import ctime, time
 from colorama import Fore, Back, Style
 from termcolor import cprint
 import color_by_numbers
+import mediapipe as mp
+from collections import deque
 
 # PSR, University of Aveiro, November 2021.
 # Contributors
@@ -30,6 +32,8 @@ global drawing_mode
 global frame_painting
 global canvas
 global color_0, color_1, color_2, color_3
+width_canvas = 400
+height_canvas = 800
 
 draw_square = False
 draw_circle = False
@@ -38,8 +42,10 @@ what_to_draw = None
 
 painting_color = (0, 0, 0)
 previous_point = (0, 0)
+previous_point_hp = (0, 0)
 previous_mouse_point = (0, 0)
 previous_point_shape = (0, 0)
+centroid_finger = (0, 0)
 x_previous = 0
 y_previous = 0
 radius = 10
@@ -67,7 +73,7 @@ def onShapes(cursor, xposition, yposition, flags, param):
         if draw_square:
             cv2.rectangle(whiteboard_copy, previous_point_shape, (cX, cY), painting_color,
                           radius)  # animação do quadrado mexer-se
-        elif draw_circle == True:
+        elif draw_circle:
             aux = (cX - previous_point_shape[0], cY - previous_point_shape[1])
             circle_radius = math.sqrt(aux[0] ** 2 + aux[1] ** 2)
             cv2.circle(whiteboard_copy, previous_point_shape, int(circle_radius), painting_color, radius)
@@ -81,6 +87,32 @@ def onShapes(cursor, xposition, yposition, flags, param):
     elif draw_circle == False and what_to_draw == ord('d'):
         cv2.circle(param, previous_point_shape, int(circle_radius), painting_color, radius)
         return
+
+
+# ------------------------------------------------------------------------------------------------------#
+
+# ---------------------------------------------------
+# Function for Functioning Modes
+# ---------------------------------------------------
+
+def onModes(usp, ar, pn, mouse, hp):
+    if usp == False and ar == False and pn is None and hp == False and mouse == False:
+        return 'normal_mode'
+
+    elif usp == True and ar == False and pn is None and hp == False and mouse == False:
+        return 'usp_mode'
+
+    elif usp == True and ar == False and pn is None and hp == False and mouse == True:
+        return 'usp_w_mouse_mode'
+
+    elif usp == False and ar == True and pn is None and hp == False and mouse == False:
+        return 'ar_mode'
+
+    elif usp == False and ar == False and pn is not None and hp == False and mouse == False:
+        return 'pn_mode'
+
+    elif usp == False and ar == False and pn is None and hp == True and mouse == False:
+        return 'hp_mode'
 
 
 # ------------------------------------------------------------------------------------------------------#
@@ -117,9 +149,10 @@ def onMouse(cursor, xposition, yposition, flags, param):
 
 def main():
     # Defining Global variables
-    global radius, painting_color, previous_point, mouse_toggle, frame_painting, previous_point_shape
+    global radius, painting_color, previous_point, mouse_toggle, frame_painting, previous_point_shape, hands, whiteboard_hand, centroid_finger
     global alpha, path_color_by_numbers, canvas, draw_square, draw_circle, what_to_draw
-    global color_0, color_1, color_2, color_3
+    global color_0, color_1, color_2, color_3, width_canvas, height_canvas
+    global whiteboard, rpoints, draw, my_hands, rgb_hand, previous_point_hp
 
     # ---------------------------------------------------
     # Definition of Parser Arguments
@@ -149,12 +182,18 @@ def main():
 
     parser.add_argument('-pn',
                         '--color_by_numbers',
-                        action='store_true',
+                        type=str,
+                        default=None,
                         help='Path to file to paint by numbers')
+
+    parser.add_argument('-hp',
+                        '--hand_painting',
+                        action='store_true',
+                        help='Using finger as pencil')
 
     args = vars(parser.parse_args())
 
-# ------------------------------------------------------------------------------------------------------#
+    # ------------------------------------------------------------------------------------------------------#
 
     # ---------------------------------------------------
     # Printing of commands list and welcome message
@@ -174,9 +213,12 @@ def main():
     print("- RED PAINT    " + Back.RED + "      " + Style.RESET_ALL + " -> PRESS " + Fore.RED + "'r'" + Fore.RESET)
     print("- GREEN PAINT  " + Back.GREEN + "      " + Style.RESET_ALL + " -> PRESS " + Fore.GREEN + "'g'" + Fore.RESET)
     print("- BLUE PAINT   " + Back.BLUE + "      " + Style.RESET_ALL + " -> PRESS " + Fore.BLUE + "'b'" + Fore.RESET)
-    print("- PINK PAINT   " + Back.MAGENTA + "      " + Style.RESET_ALL + " -> PRESS " + Fore.MAGENTA + "'p'" + Fore.RESET)
-    print("- ORANGE PAINT " + Back.LIGHTRED_EX + "      " + Style.RESET_ALL + " -> PRESS " + Fore.LIGHTRED_EX + "'o'" + Fore.RESET)
-    print("- YELLOW PAINT " + Back.LIGHTYELLOW_EX + "      " + Style.RESET_ALL + " -> PRESS " + Fore.LIGHTYELLOW_EX + "'y'" + Fore.RESET)
+    print(
+        "- PINK PAINT   " + Back.MAGENTA + "      " + Style.RESET_ALL + " -> PRESS " + Fore.MAGENTA + "'p'" + Fore.RESET)
+    print(
+        "- ORANGE PAINT " + Back.LIGHTRED_EX + "      " + Style.RESET_ALL + " -> PRESS " + Fore.LIGHTRED_EX + "'o'" + Fore.RESET)
+    print("- YELLOW PAINT " + Back.LIGHTYELLOW_EX + "      " + Style.RESET_ALL + " -> PRESS "
+          + Fore.LIGHTYELLOW_EX + "'y'" + Fore.RESET)
     print("- ERASE        " + Back.WHITE + "      " + Style.RESET_ALL + " -> PRESS 'e'")
     print("-TRANSPARENCY +" + " \u2b1c " + "   -> PRESS " + Fore.GREEN + "'h'" + Fore.RESET)
     print("-TRANSPARENCY -" + " \U0001f533" + "   -> PRESS " + Fore.RED + "'l'" + Fore.RESET)
@@ -189,7 +231,7 @@ def main():
     print("- Paint color 2 " + u"\U0001f522" + "    -> PRESS '2'")
     print("- Paint color 3 " + u"\U0001f522" + "    -> PRESS '3'")
 
-# ------------------------------------------------------------------------------------------------------#
+    # ------------------------------------------------------------------------------------------------------#
 
     # Creating all of the windows
     window_whiteboard = 'Pynting'
@@ -204,17 +246,19 @@ def main():
     # Initialize canvas size with one video capture
     capture = cv2.VideoCapture(0)
     _, frame = capture.read()
-    width, height, channel = frame.shape
+    width_frame, height_frame, channel = frame.shape
 
     if args['augmented_reality']:
-        whiteboard = np.ones((width, height, channel), np.uint8)
+        whiteboard = np.ones((width_frame, height_frame, channel), np.uint8)
         painting_color = (255, 0, 0)
+    elif args['hand_painting']:
+        whiteboard_hand = np.ones((width_frame, height_frame, channel), np.uint8) * 255
     else:
-        whiteboard = np.ones((width, height, channel), np.uint8) * 255
+        whiteboard = np.ones((width_frame, height_frame, channel), np.uint8) * 255
 
     # Import color by numbers function
-    if args['color_by_numbers']:
-        color = color_by_numbers.main('python.jpg', 4)
+    if args['color_by_numbers'] is not None:
+        color = color_by_numbers.main(args['color_by_numbers'], 4)
 
         dn = 15
 
@@ -248,13 +292,14 @@ def main():
                     colors[j][i] = 255
 
         # Original image initializing
-        original = cv2.imread('python.jpg', 1)
+        original = cv2.imread(args['color_by_numbers'], 1)
+        original = cv2.resize(original, (width_frame, height_frame), interpolation=cv2.INTER_LINEAR)
+
         cv2.namedWindow('Original', cv2.WINDOW_NORMAL)
         cv2.imshow('Original', original)
 
-        # original = cv.cvtColor(original, cv.COLOR_BGR2RGB)
-        (width, height, channel) = original.shape
-        canvas = np.ones((width, height, channel), np.uint8) * 255
+        (width_canvas, height_canvas, channel) = original.shape
+        canvas = np.ones((width_canvas, height_canvas, channel), np.uint8) * 255
 
         mask_color0 = cv2.inRange(original, color_0_down, color_0_up)
         mask_color1 = cv2.inRange(original, color_1_down, color_1_up)
@@ -287,10 +332,7 @@ def main():
         cv2.drawContours(canvas, contours_3, -1, (0, 0, 0), 4)
 
         for c_0 in contours_0:
-            M = cv2.moments(c_0)
-            cX_0 = int(M["m10"] / M["m00"])
-            cY_0 = int(M["m01"] / M["m00"])
-
+            # Background Color
             # draw the contour and center of the shape on the image
             cv2.drawContours(canvas, [c_0], -1, (0, 0, 0), 2)
             cv2.putText(canvas, str(0), (30, 30),
@@ -331,6 +373,12 @@ def main():
         cv2.namedWindow('color map', cv2.WINDOW_NORMAL)
         cv2.imshow('color map', pie_chart)
 
+    if args['hand_painting']:
+        my_hands = mp.solutions.hands
+        hands = my_hands.Hands()
+        draw = mp.solutions.drawing_utils
+        rpoints = [deque(maxlen=512)]
+
     while True:
         # Read each frame of the video capture
         _, frame = capture.read()
@@ -338,8 +386,12 @@ def main():
         if args['mirror_image']:
             frame = cv2.flip(frame, 1)
 
+        mode = onModes(args['use_shake_prevention'], args['augmented_reality'],
+                       args['color_by_numbers'], mouse_toggle, args['hand_painting'])
+
         # Frame copies for overlays and new windows
         image_for_segmentation = frame.copy()
+        image_for_hand_paint = frame.copy()
 
         # Convert dict. into np.arrays to define the minimum thresholds
         min_thresh = np.array([ranges['limits']['B/H']['min'],
@@ -358,6 +410,21 @@ def main():
         # Find all the contours of white blobs in the mask_segmented
         contours, hierarchy = cv2.findContours(
             mask_segmented, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+        if mode == 'hp_mode':
+            rgb_hand = cv2.cvtColor(image_for_hand_paint, cv2.COLOR_BGR2RGB)
+            result = hands.process(rgb_hand)
+            if result.multi_hand_landmarks:
+                for hand_landmarks in result.multi_hand_landmarks:
+                    draw.draw_landmarks(rgb_hand, hand_landmarks, my_hands.HAND_CONNECTIONS)
+                    for id, landmark in enumerate(hand_landmarks.landmark):
+                        h, w, _ = rgb_hand.shape
+                        cx_finger, cy_finger = int(landmark.x * w), int(landmark.y * h)
+                        centroid_finger = (cx_finger, cy_finger)
+                        if hand_landmarks != 0:
+                            if id == 8:
+                                rpoints[0].append((cx_finger, cy_finger))
+                                cv2.circle(rgb_hand, (cx_finger, cy_finger), radius, painting_color, -1)
 
         # If it finds any contours >0, it calculates one with max. area
         if len(contours) != 0:
@@ -385,10 +452,9 @@ def main():
                     previous_point = centroid
 
                 # User shake prevention working without mouse functionality
-                if args['use_shake_prevention'] and mouse_toggle == False and args['augmented_reality'] == False \
-                        and args['color_by_numbers'] == False:
+                if mode == 'usp_mode':
+                    print('ajksdjaks')
                     aux = (previous_point[0] - centroid[0], previous_point[1] - centroid[1])
-
                     if math.sqrt(aux[0] ** 2 + aux[1] ** 2) > 320:
                         cv2.circle(whiteboard, centroid, radius, painting_color, -1)
                     else:
@@ -400,13 +466,13 @@ def main():
                     previous_point = centroid
 
                 # Only draw with mouse moving functionality
-                elif mouse_toggle == True and args['use_shake_prevention'] == True and args[
-                    'augmented_reality'] == False and args['color_by_numbers'] == False:
+                elif mode == 'usp_w_mouse_mode':
+                    print('regee')
                     cv2.setMouseCallback(window_whiteboard, onMouse, param=whiteboard)
 
                 # Normal mode without mouse functionality and USP
-                elif mouse_toggle == False and args['use_shake_prevention'] == False and args[
-                    'augmented_reality'] == False and args['color_by_numbers'] == False:
+                elif mode == 'ar_mode':
+                    print('im here ar')
                     cv2.line(img=whiteboard,
                              pt1=previous_point,
                              pt2=centroid,
@@ -414,21 +480,34 @@ def main():
                              thickness=radius)
                     previous_point = centroid
 
-                elif mouse_toggle == False and args['use_shake_prevention'] == False and args[
-                    'augmented_reality'] == False and args['color_by_numbers'] == True:
+                elif mode == 'pn_mode':
+                    print('im here pm')
                     cv2.line(img=canvas,
                              pt1=previous_point,
                              pt2=centroid,
                              color=painting_color,
                              thickness=radius)
                     previous_point = centroid
-                else:
+
+                elif mode == 'normal_mode':
+                    print('im here normal')
                     cv2.line(img=whiteboard,
                              pt1=previous_point,
                              pt2=centroid,
                              color=painting_color,
                              thickness=radius)
                     previous_point = centroid
+
+        if mode == 'hp_mode':
+            if previous_point_hp == (0, 0):
+                previous_point_hp = centroid_finger
+
+            cv2.line(img=whiteboard_hand,
+                     pt1=previous_point_hp,
+                     pt2=centroid_finger,
+                     color=(0, 0, 0),
+                     thickness=radius)
+            previous_point_hp = centroid_finger
 
 # ------------------------------------------------------------------------------------------------------#
         # ---------------------------------------------------
@@ -453,8 +532,7 @@ def main():
             cv2.namedWindow('Frame Painting', cv2.WINDOW_NORMAL)
             cv2.imshow('Frame Painting', frame_painting)
 
-        elif args['color_by_numbers']:
-
+        elif args['color_by_numbers'] is not None:
             # Defining the window and plotting the image_segmented
             cv2.namedWindow(window_segmented, cv2.WINDOW_NORMAL)
             cv2.imshow(window_segmented, mask_segmented)
@@ -466,6 +544,21 @@ def main():
             # Display the canvas for painting by numbers
             cv2.namedWindow('canvas', cv2.WINDOW_NORMAL)
             cv2.imshow('canvas', canvas)
+
+        elif args['hand_painting']:
+
+            # Convert and display hand with landmarks
+            rgb_hand = cv2.cvtColor(rgb_hand, cv2.COLOR_RGB2BGR)
+            cv2.namedWindow('window_hand', cv2.WINDOW_NORMAL)
+            cv2.imshow('window_hand', rgb_hand)
+
+            # Defining the window and plotting the whiteboard
+            cv2.namedWindow('window_whiteboard_hand', cv2.WINDOW_NORMAL)
+            cv2.imshow('window_whiteboard_hand', whiteboard_hand)
+
+            # Defining the window and plotting the original frame
+            cv2.namedWindow(window_original_frame, cv2.WINDOW_NORMAL)
+            cv2.imshow(window_original_frame, frame)
 
         else:
             # Defining the window and plotting the whiteboard
@@ -545,14 +638,14 @@ def main():
 
         elif key == ord('c'):
             if args['augmented_reality']:
-                whiteboard = np.ones((width, height, channel), np.uint8)
-                cprint('Nice job, you just killed a masterpiece...'
-                       , color='white', on_color='on_red', attrs=['blink'])
+                whiteboard = np.ones((width_frame, height_frame, channel), np.uint8)
+                cprint('Nice job, you just killed a masterpiece...',
+                       color='white', on_color='on_red', attrs=['blink'])
 
             else:
-                whiteboard = np.ones((width, height, channel), np.uint8) * 255
-                cprint('Nice job, you just killed a masterpiece...'
-                       , color='white', on_color='on_red', attrs=['blink'])
+                whiteboard = np.ones((width_frame, height_frame, channel), np.uint8) * 255
+                cprint('Nice job, you just killed a masterpiece...',
+                       color='white', on_color='on_red', attrs=['blink'])
 
         elif key == ord('w'):
             if args['augmented_reality']:
