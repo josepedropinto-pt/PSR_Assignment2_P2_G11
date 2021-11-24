@@ -24,7 +24,7 @@ This program allows you to use an object of your choice as a brush and paint on 
 
 ### How to use 
 
-To run the code, you need to pass in the required argument --json_file. You may also pass in some additional arguments, as follows.
+To run the code, you need to pass in the required argument -j, of json file path. You may also pass in some additional arguments, as follows.
 
 ```text
 optional arguments:
@@ -46,19 +46,10 @@ optional arguments:
 
 ```
 
-The default camera number is 0, as this is the most common one.
-
-If the --augmented_reality argument is used, the program will paint on the live video, as opposed to a white canvas.
-
-The --use_shake_prevention funtionality creates a smoother drawing and allows you to start and stop a brush stroke by hiding your "brush object".
-
-The --mirror_image functionality mirrors the image that the camera captures, making it easier to draw in the air.
-
-
 ***
 Trabalho 2 da unidade curricular de Programação de Sistemas Robóticos, Mestrado Integrado em Engenharia Mecânica, Universidade de Aveiro.
 Trabalho realizado por:
 
-- Jose Pedro Pint
+- Jose Pedro Pinto
 - Pedro Carvalho
 - Vinicius Campos
