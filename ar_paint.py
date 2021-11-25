@@ -77,20 +77,21 @@ def print_menu():
         "- ORANGE PAINT " + Back.LIGHTRED_EX + "      " + Style.RESET_ALL + " -> PRESS " + Fore.LIGHTRED_EX + "'o'" + Fore.RESET)
     print("- YELLOW PAINT " + Back.LIGHTYELLOW_EX + "      " + Style.RESET_ALL + " -> PRESS "
           + Fore.LIGHTYELLOW_EX + "'y'" + Fore.RESET)
+    print("- BLACK PAINT  " + Back.BLACK + "      " + Style.RESET_ALL + " -> PRESS " + Fore.BLACK + "'r'" + Fore.RESET)
     print("- ERASE        " + Back.WHITE + "      " + Style.RESET_ALL + " -> PRESS 'e'")
-    print("-TRANSPARENCY +" + " \u2b1c " + "   -> PRESS " + Fore.GREEN + "'h'" + Fore.RESET)
-    print("-TRANSPARENCY -" + " \U0001f533" + "    -> PRESS " + Fore.RED + "'l'" + Fore.RESET)
+    print("- TRANSPARENCY +" + " \u2b1c " + "  -> PRESS " + Fore.GREEN + "'h'" + Fore.RESET)
+    print("- TRANSPARENCY -" + " \U0001f533" + "   -> PRESS " + Fore.RED + "'l'" + Fore.RESET)
     print("- MOUSE MODE    " + u"\U0001F5B1" + "     -> PRESS 'm'")
     print("- MOUSE MODE OFF " + u"\U0001F4FA" + "   -> PRESS 'n'")
     print("- THICKER BRUSH " + u"\U0001F58C" + "     -> PRESS '" + "+" + "'")
     print("- THINNER BRUSH " + u"\U0001F58C" + "     -> PRESS '-'")
     print("- Square Shape  " + u"\u25FC " + "    -> PRESS 's'")
-    print("- Circle Shape  " + u"\u20DD" + "    -> PRESS 'd'")
+    print("- Circle Shape  " + u"\u20DD" + "      -> PRESS 'd'")
     print("- Paint color 0 " + u"\U0001f522" + "    -> PRESS '0'")
     print("- Paint color 1 " + u"\U0001f522" + "    -> PRESS '1'")
     print("- Paint color 2 " + u"\U0001f522" + "    -> PRESS '2'")
     print("- Paint color 3 " + u"\U0001f522" + "    -> PRESS '3'")
-    print("-Paint Grade    " + u"\U0001F50D" + "    -> PRESS 'j'")
+    print("- Paint Grade   " + u"\U0001F50D" + "    -> PRESS 'j'")
 
 
 # ------------------------------------------------------------------------------------------------------#
@@ -133,9 +134,8 @@ def color_with_numbers(color):
             elif colors[j][i] > 255:
                 colors[j][i] = 255
 
-        # Original image initializing
+    # Original image initializing
     original = cv2.imread(path_to_color_by_numbers, 1)
-    # original = cv2.resize(original, (width_frame, height_frame), interpolation=cv2.INTER_LINEAR)
 
     cv2.namedWindow('Original', cv2.WINDOW_NORMAL)
     cv2.imshow('Original', original)
@@ -227,17 +227,10 @@ def evaluate_paint():
     mask_2_colored = cv2.bitwise_or(original, original, mask=mask_color2)
     mask_3_colored = cv2.bitwise_or(original, original, mask=mask_color3)
 
-
-    # cv2.imshow('mask0colored', mask_0_colored)
-    # cv2.imshow('mask1colored', mask_1_colored)
-    # cv2.imshow('mask2colored', mask_2_colored)
-    # cv2.imshow('mask3colored', mask_3_colored)
-
     result_0 = cv2.subtract(canvas, mask_0_colored)
     result_1 = cv2.subtract(canvas, mask_1_colored)
     result_2 = cv2.subtract(canvas, mask_2_colored)
     result_3 = cv2.subtract(canvas, mask_3_colored)
-
 
     total_0 = np.sum(mask_0_colored != 0)
     total_1 = np.sum(mask_1_colored != 0)
@@ -259,9 +252,6 @@ def evaluate_paint():
     painted_1 = painted_1 - 89702
     painted_2 = painted_2 - 89702
     painted_3 = painted_3 - 89702
-
-    # print("painted_0 " + str(painted_0) + "painted_1 " + str(painted_1) +
-    #       "painted_2 " + str(painted_2) + "painted_3 " + str(painted_3))
 
     ratio_0 = painted_0/total_0
     ratio_1 = painted_1/total_1
@@ -299,7 +289,7 @@ def onShapes(cursor, xposition, yposition, flags, param):
         (cX, cY) = (xposition, yposition)
         if draw_square:
             cv2.rectangle(whiteboard_copy, previous_point_shape, (cX, cY), painting_color,
-                          radius)  # animação do quadrado mexer-se
+                          radius)  # Square move animation
         elif draw_circle:
             aux = (cX - previous_point_shape[0], cY - previous_point_shape[1])
             circle_radius = math.sqrt(aux[0] ** 2 + aux[1] ** 2)
@@ -308,7 +298,7 @@ def onShapes(cursor, xposition, yposition, flags, param):
 
     elif draw_square == False and what_to_draw == ord('s'):
         cv2.rectangle(param, previous_point_shape, (cX, cY), painting_color,
-                      radius)  # por o quadrado fixo no whiteboard
+                      radius)  # Fix the square on whiteboard
         what_to_draw = None
         return
     elif draw_circle == False and what_to_draw == ord('d'):
@@ -746,13 +736,15 @@ def main():
         elif key == ord('c'):
             if args['augmented_reality']:
                 whiteboard = np.ones((width_frame, height_frame, channel), np.uint8)
-                cprint('Nice job, you just killed a masterpiece...',
-                       color='white', on_color='on_red', attrs=['blink'])
+
+            elif args['hand_painting']:
+                whiteboard_hand = np.ones((width_frame, height_frame, channel), np.uint8) * 255
 
             else:
                 whiteboard = np.ones((width_frame, height_frame, channel), np.uint8) * 255
-                cprint('Nice job, you just killed a masterpiece...',
-                       color='white', on_color='on_red', attrs=['blink'])
+
+            cprint('Nice job, you just killed a masterpiece...',
+                   color='white', on_color='on_red', attrs=['blink'])
             count += 1
 
         elif key == ord('w'):
