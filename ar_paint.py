@@ -338,6 +338,9 @@ def onModes(usp, ar, pn, mouse, hp):
     elif usp == False and ar == False and pn is not None and hp == False and mouse == False:
         return 'pn_mode'
 
+    elif usp == False and ar == False and pn is not None and hp == False and mouse == True:
+        return 'pn_w_mouse_mode'
+
     elif usp == False and ar == False and pn is None and hp == True and mouse == False:
         return 'hp_mode'
 
@@ -577,6 +580,9 @@ def main():
                              thickness=radius)
                     previous_point = centroid
 
+                elif mode == 'pn_w_mouse_mode':
+                    cv2.setMouseCallback('canvas', onMouse, param=canvas)
+
                 elif mode == 'normal_mode':
                     cv2.line(img=whiteboard,
                              pt1=previous_point,
@@ -760,12 +766,12 @@ def main():
                 cv2.imwrite(file_name, whiteboard)
             count += 1
 
-        elif args['use_shake_prevention'] and key == ord('m'):
+        elif args['use_shake_prevention'] and key == ord('m') or args['color_by_numbers'] and key == ord('m'):
             mouse_toggle = True
             print('Now you can move your mouse to paint')
             count += 1
 
-        elif args['use_shake_prevention'] and key == ord('n'):
+        elif args['use_shake_prevention'] and key == ord('n') or args['color_by_numbers'] and key == ord('n'):
             mouse_toggle = False
             print('You can no longer use your mouse to paint')
             count += 1
