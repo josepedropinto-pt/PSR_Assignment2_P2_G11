@@ -2,6 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/../PSR_2021_2022/.idea/PSR_2021_2022.iml" filepath="$PROJECT_DIR$/../PSR_2021_2022/.idea/PSR_2021_2022.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../PSR_Assignment1_P2_G8/.idea/PSR_Assignment1_P2_G8.iml" filepath="$PROJECT_DIR$/../PSR_Assignment1_P2_G8/.idea/PSR_Assignment1_P2_G8.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/PSR_Assignment2_P2_G11.iml" filepath="$PROJECT_DIR$/.idea/PSR_Assignment2_P2_G11.iml" />
     </modules>
   </component>
