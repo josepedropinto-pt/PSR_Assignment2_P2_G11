@@ -77,7 +77,6 @@ def print_menu():
         "- ORANGE PAINT " + Back.LIGHTRED_EX + "      " + Style.RESET_ALL + " -> PRESS " + Fore.LIGHTRED_EX + "'o'" + Fore.RESET)
     print("- YELLOW PAINT " + Back.LIGHTYELLOW_EX + "      " + Style.RESET_ALL + " -> PRESS "
           + Fore.LIGHTYELLOW_EX + "'y'" + Fore.RESET)
-    print("- BLACK PAINT  " + Back.BLACK + "      " + Style.RESET_ALL + " -> PRESS " + Fore.BLACK + "'r'" + Fore.RESET)
     print("- ERASE        " + Back.WHITE + "      " + Style.RESET_ALL + " -> PRESS 'e'")
     print("- TRANSPARENCY +" + " \u2b1c " + "  -> PRESS " + Fore.GREEN + "'h'" + Fore.RESET)
     print("- TRANSPARENCY -" + " \U0001f533" + "   -> PRESS " + Fore.RED + "'l'" + Fore.RESET)
@@ -517,7 +516,7 @@ def main():
             area = cv2.contourArea(c)
 
             # Starts painting only if it's bigger than threshold defined
-            if area > 400:
+            if area > 500:
                 # Extract coordinates of bounding box
                 x, y, w, h = cv2.boundingRect(c)
 
